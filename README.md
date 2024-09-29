@@ -157,10 +157,10 @@ We provide already pre-processed skeleton data of CASIA B for **single-condition
 Please download the pre-processed datasets into the directory ``Datasets/``. <br/>
 
 ### Usage
-To (1) apply **Prompter** to TranSG to obtain skeleton representations and (2) validate their effectiveness on the person re-ID task on CASIA B under **single-condition** and **cross-condition** settings, please simply run the following command:
+To (1) apply **Prompter** (Base model: TranSG) to RGB-estimated skeletons in CASIA-B to obtain feature representations and (2) validate their effectiveness on the person re-ID task under **single-condition** and **cross-condition** settings of CASIA-B, please simply run the following command:
 
 ```bash
-python TranSG-Prompter.py --dataset CAISA_B --probe_type nm.nm --length 40
+python Prompter.py --dataset CAISA_B --probe_type nm.nm --length 40
 
 # --length [40, 50, 60] 
 # --probe_type ['nm.nm' (for 'Nm' probe and 'Nm' gallery), 'cl.cl', 'bg.bg', 'cl.nm' (for 'Cl' probe and 'Nm' gallery), 'bg.nm']
@@ -177,10 +177,10 @@ python TranSG-Prompter.py --dataset CAISA_B --probe_type nm.nm --length 40
 ## Application to Different Skeleton Modeling
 
 ### Usage
-To (1) apply **Prompter** to TranSG on skeleton representations of a specific modeling level (joint-level, part-level, body-level) and (2) individually validate the effectiveness on the person re-ID task on the person re-ID task on a specific dataset (probe), please simply run the following command:  
+To (1) apply **Prompter** (Base model: TranSG) to a different skeleton modeling (joint-level, part-level, body-level) to obtain feature representations and (2) individually validate its effectiveness for person re-ID on a specific dataset (probe), please simply run the following command:  
 
 ```bash
-python TranSG-Prompter.py --dataset KS20 --probe probe --level J
+python Prompter.py --dataset KS20 --probe probe --level J
 
 # Default options: --dataset KS20 --probe probe --length 6
 # --dataset [IAS, KS20, BIWI, KGBD]
