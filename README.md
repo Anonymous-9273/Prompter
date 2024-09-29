@@ -28,7 +28,7 @@ conda install scikit-learn
 ```
 
 ## Datasets and Models
-We provide three already **pre-processed datasets** (IAS, BIWI, KGBD) with various sequence lengths (**f=4/6/8/10/12**) [**here (pwd: 7je2)**](https://pan.baidu.com/s/1R7CEsyMJsEnZGFLqwvchBg) and the **pre-trained models** [**here (pwd: kzys)**](https://pan.baidu.com/s/1hGeP-mymedbjgxsubFmyPQ). Since we report the average performance of our approach on all datasets, here the provided models may produce better results than the paper. <br/>
+We provide three already **pre-processed datasets** (IAS, BIWI, KGBD) with various sequence lengths (**f=4/6/8/10/12**) [**here (pwd: 7je2)**](https://pan.baidu.com/s/1R7CEsyMJsEnZGFLqwvchBg) and the **pre-trained models** [**here (pwd: a3ct)**](https://pan.baidu.com/s/17FjBGHBpgeA5vFEBREKHag). Since we report the average performance of our approach on all datasets, here the provided models may produce better results than the paper. <br/>
 
 
 Please download the pre-processed datasets and model files while unzipping them to ``Datasets/`` and ``ReID_Models/`` folders in the current directory. <br/>
@@ -160,7 +160,7 @@ Please download the pre-processed datasets into the directory ``Datasets/``. <br
 To (1) apply **Prompter** (Base model: TranSG) to RGB-estimated skeletons in CASIA-B to obtain feature representations and (2) validate their effectiveness on the person re-ID task under **single-condition** and **cross-condition** settings of CASIA-B, please simply run the following command:
 
 ```bash
-python Prompter.py --dataset CAISA_B --probe_type nm.nm --length 40
+python Prompter-Eval.py --dataset CAISA_B --probe_type nm.nm --length 40
 
 # --length [40, 50, 60] 
 # --probe_type ['nm.nm' (for 'Nm' probe and 'Nm' gallery), 'cl.cl', 'bg.bg', 'cl.nm' (for 'Cl' probe and 'Nm' gallery), 'bg.nm']
@@ -180,7 +180,7 @@ python Prompter.py --dataset CAISA_B --probe_type nm.nm --length 40
 To (1) apply **Prompter** (Base model: TranSG) to a different skeleton modeling (joint-level, part-level, body-level) to obtain feature representations and (2) individually validate its effectiveness for person re-ID on a specific dataset (probe), please simply run the following command:  
 
 ```bash
-python Prompter.py --dataset KS20 --probe probe --level J
+python Prompter-Eval.py --dataset KS20 --probe probe --level J
 
 # Default options: --dataset KS20 --probe probe --length 6
 # --dataset [IAS, KS20, BIWI, KGBD]
