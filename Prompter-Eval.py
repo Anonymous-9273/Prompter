@@ -57,7 +57,7 @@ tf.app.flags.DEFINE_string('pos_enc', '1', "")  # positional encoding or not
 tf.app.flags.DEFINE_string('enc_k', '10', "")  # first K eigenvectors for positional encoding
 tf.app.flags.DEFINE_string('rand_flip', '1', "")  # random flipping strategy
 
-# Original masking parameters, some are not used in ProMISE
+# Original masking parameters, some are not used in Prompter
 tf.app.flags.DEFINE_string('St_mask_num', '10',
 						   "")  # number of random masks (from 1 to (J-1)) in structure prompted reconstruction
 tf.app.flags.DEFINE_string('Tr_mask_num', '2',
@@ -70,11 +70,11 @@ tf.app.flags.DEFINE_string('S_prompt', 'MSE',
 						   "l1 or l2 or MSE")  # reconstruction loss type for structure prompted reconstruction
 tf.app.flags.DEFINE_string('level', 'J', "J, P, B")  # joint-scale (original), part-scale, or body-scale graphs
 
-# Parameters of ProMISE
-tf.app.flags.DEFINE_string('alpha', '0.5', "")  # weight coefficient to combine spatial reconstruction and temporal reconstruction in ProMISE
-tf.app.flags.DEFINE_string('prob_t', '0.5', "")  # probability for masking each temporal position for PTM
-tf.app.flags.DEFINE_string('prob_s', '0.5', "")  # probability for masking each spatial position for PSM
-tf.app.flags.DEFINE_string('GPC_lambda', '0.5', "")  # the lambda for fusing downstream objective (GPC in TranSG) and SSL objective (ProMISE)
+# Parameters of Prompter
+tf.app.flags.DEFINE_string('alpha', '0.5', "")  # weight coefficient to combine spatial reconstruction and temporal reconstruction in Prompter
+tf.app.flags.DEFINE_string('prob_t', '0.5', "")  # probability for masking skeletal temporal context (motion trajectories) in PTCM
+tf.app.flags.DEFINE_string('prob_s', '0.5', "")  # probability for masking skeletal spatial context (structrual locations) in PSCM
+tf.app.flags.DEFINE_string('GPC_lambda', '0.5', "")  # the lambda for fusing downstream objective (GPC in TranSG) and SSL objective (Prompter)
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -162,7 +162,7 @@ print('lr: ' + str(FLAGS.lr))
 print('patience: ' + FLAGS.patience)
 print('Mode: ' + FLAGS.mode)
 
-print('----- ProMISE hyperparams -----')
+print('----- Prompter hyperparams -----')
 print('p_s: ' + FLAGS.prob_s)
 print('p_t: ' + FLAGS.prob_t)
 print('alpha: ' + FLAGS.alpha)
@@ -251,7 +251,7 @@ elif FLAGS.level == 'B':
 	k = 4
 
 
-change += '_TranSG_ProMISE_f_' + FLAGS.length  + '_prob_s_' + FLAGS.prob_s + '_prob_t_' + FLAGS.prob_t  + '_alpha_' + FLAGS.alpha + '_lambda_' + FLAGS.GPC_lambda
+change += '_TranSG_Prompter_f_' + FLAGS.length  + '_prob_s_' + FLAGS.prob_s + '_prob_t_' + FLAGS.prob_t  + '_alpha_' + FLAGS.alpha + '_lambda_' + FLAGS.GPC_lambda
 
 
 if FLAGS.mode == 'Train':
@@ -330,7 +330,7 @@ if FLAGS.mode == 'Train':
 			gt_pos = tf.reshape(J_in, [batch_size, time_step, joint_num * 3])
 			G_recon_loss = 0
 
-			# spatial reconstruction using PSM, node_mask is the random masking of spatial positions
+			# spatial context reconstruction and inference of skeleton sequence based on PSCM, node_mask is the random masking of spatial positions
 			def skeleton_recon_loss(h):
 				mask_G = tf.boolean_mask(h, tf.reshape(node_mask, [-1]), axis=-2)
 
@@ -351,7 +351,7 @@ if FLAGS.mode == 'Train':
 					G_recon_loss = tf.losses.mean_squared_error(G_h_r2, gt_pos) / batch_size
 				return G_recon_loss
 
-			# temporal reconstruction using PTM, seq_mask is the random masking of temporal positions
+			# temporal context reconstruction and inference of skeleton sequence based on PTCM, seq_mask is the random masking of temporal positions
 			def trajectory_recon_loss(h_ori):
 				part_T_enc_1 = tf.boolean_mask(h_ori, tf.reshape(seq_mask, [-1]), axis=1)
 				# [batch_size, time_step - mask_num, joint_num, H] -> [batch_size, joint_num, time_step - mask_num, H]
@@ -481,7 +481,7 @@ if FLAGS.mode == 'Train':
 					# 							   replace=False)
 					# mask_rand_1 = np.zeros((time_step), dtype=bool)
 
-					# PTM
+					# PTCM
 					prob = np.random.uniform(0, 1, [time_step, ])
 					mask_rand_1 = prob >= float(FLAGS.prob_t)
 					# ensure not all zeros
@@ -496,7 +496,7 @@ if FLAGS.mode == 'Train':
 					# 							   replace=False)
 					# mask_rand_2 = np.zeros((time_step), dtype=bool)
 					# if FLAGS.prob_t != '-1':
-					# PTM
+					# PTCM
 					prob = np.random.uniform(0, 1, [time_step, ])
 					mask_rand_2 = prob >= float(FLAGS.prob_t)
 					while np.mean(mask_rand_2) == 0:
@@ -528,7 +528,7 @@ if FLAGS.mode == 'Train':
 							rand_list = np.random.choice(joint_num, size=len(select_nodes), replace=False)
 							node_mask_rand[rand_list] = False
 					elif FLAGS.St_prompt_type == '3':
-						# PSM
+						# PSCM
 						prob = np.random.uniform(0, 1, [joint_num, ])
 						node_mask_rand = prob >= float(FLAGS.prob_s)
 						# ensure not all zeros
@@ -1082,7 +1082,7 @@ if FLAGS.mode == 'Train':
 
 					if tr_step % display == 0:
 						print(
-							'[%s] Batch num: %d | D Loss (GPC): %.5f | SSL Loss (ProMISE): %.5f' %
+							'[%s] Batch num: %d | D Loss (GPC): %.5f | SSL Loss (Prompter): %.5f' %
 							(str(epoch), tr_step, GPC_loss_, SSL_loss_))
 					tr_step += 1
 				if FLAGS.save_flag == '1':
@@ -1433,7 +1433,7 @@ print('lr: ' + str(FLAGS.lr))
 print('patience: ' + FLAGS.patience)
 print('Mode: ' + FLAGS.mode)
 
-print('----- ProMISE hyperparams -----')
+print('----- Prompter hyperparams -----')
 print('p_s: ' + FLAGS.prob_s)
 print('p_t: ' + FLAGS.prob_t)
 print('alpha: ' + FLAGS.alpha)

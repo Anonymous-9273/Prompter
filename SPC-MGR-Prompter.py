@@ -60,16 +60,16 @@ tf.app.flags.DEFINE_string('save_model', '0', "")
 tf.app.flags.DEFINE_string('H', '128', "")
 tf.app.flags.DEFINE_string('model_size', '0', "")
 tf.app.flags.DEFINE_string('loss_type', 'MSE',
-						   "l1, l2, MSE")  # reconstruction loss type for trajectory prompted reconstruction
+						   "l1, l2, MSE")  # reconstruction loss type
 
 
 
-tf.app.flags.DEFINE_string('alpha', '0.5', "")  # weight coefficient to combine spatial reconstruction and temporal reconstruction in ProMISE
+tf.app.flags.DEFINE_string('alpha', '0.5', "")  # weight coefficient to combine spatial reconstruction and temporal reconstruction in Prompter
 
-tf.app.flags.DEFINE_string('prob_t', '0.5', "")  # probability for masking each temporal position for PTM
-tf.app.flags.DEFINE_string('prob_s', '0.5', "")  # probability for masking each spatial position for PSM
+tf.app.flags.DEFINE_string('prob_t', '0.5', "")  # probability for masking skeletal temporal context (motion trajectories) in PTCM
+tf.app.flags.DEFINE_string('prob_s', '0.5', "")  # probability for masking skeletal spatial context (structrual locations) in PSCM
 
-tf.app.flags.DEFINE_string('D_lambda', '0.5', "")  # the lambda for fusing downstream objective (SPC in SPC-MGR) and SSL objective (ProMISE)
+tf.app.flags.DEFINE_string('D_lambda', '0.5', "")  # the lambda for fusing downstream objective (SPC in SPC-MGR) and SSL objective (Prompter)
 
 tf.app.flags.DEFINE_string('cnt', '', "")
 
@@ -179,7 +179,7 @@ print('fusion_lambda: ' + FLAGS.fusion_lambda)
 
 print('Mode: ' + FLAGS.mode)
 
-print('----- ProMISE hyperparams -----')
+print('----- Prompter hyperparams -----')
 print('p_s: ' + FLAGS.prob_s)
 print('p_t: ' + FLAGS.prob_t)
 print('alpha: ' + FLAGS.alpha)
@@ -238,7 +238,7 @@ cluster_epochs = 15000
 display = 20
 
 
-change += '_SPC-MGR_ProMISE_f_' + FLAGS.length  + '_prob_s_' + FLAGS.prob_s + '_prob_t_' + FLAGS.prob_t  + '_alpha_' + FLAGS.alpha + '_lambda_' + FLAGS.D_lambda + FLAGS.cnt
+change += '_SPC-MGR_Prompter_f_' + FLAGS.length  + '_prob_s_' + FLAGS.prob_s + '_prob_t_' + FLAGS.prob_t  + '_alpha_' + FLAGS.alpha + '_lambda_' + FLAGS.D_lambda + FLAGS.cnt
 
 if FLAGS.mode == 'Train':
 	loaded_graph = tf.Graph()
@@ -365,7 +365,7 @@ if FLAGS.mode == 'Train':
 			H_B_h = tf.reshape(h_H_B_seq_ftr, [batch_size, time_step, 3, hid_units[-1]])
 
 
-			# spatial reconstruction using PSM, node_mask is the random masking of spatial positions
+			# spatial context reconstruction and inference of skeleton sequence based on PSCM, node_mask is the random masking of spatial positions
 			def skeleton_recon_loss(h, gt_pos, node_num, node_mask):
 				H = hid_units[-1]
 				mask_G = tf.boolean_mask(h, tf.reshape(node_mask, [-1]), axis=-2)
@@ -389,7 +389,7 @@ if FLAGS.mode == 'Train':
 				return G_recon_loss
 
 
-			# temporal reconstruction using PTM, seq_mask is the random masking of temporal positions
+			# temporal context reconstruction and inference of skeleton sequence based on PTCM, seq_mask is the random masking of temporal positions
 			def trajectory_recon_loss(h, gt_pos, node_num, seq_mask):
 				H = hid_units[-1]
 				seq_mask = tf.gather(seq_mask, axis=0, indices=[0])
@@ -936,7 +936,7 @@ if FLAGS.mode == 'Train':
 							seq_mask: mask_rand
 						})
 					if tr_step % display == 0:
-						print('[%s] Batch num: %d | Cluser num: %d | Outlier: %d | D Loss (SPC): %.5f | SSL Loss (ProMISE): %.5f |' %
+						print('[%s] Batch num: %d | Cluser num: %d | Outlier: %d | D Loss (SPC): %.5f | SSL Loss (Prompter): %.5f |' %
 						      (str(epoch), tr_step, num_cluster, outlier_num, loss, SSL_loss_))
 					tr_step += 1
 			sess.close()
@@ -1214,7 +1214,7 @@ print('fusion_lambda: ' + FLAGS.fusion_lambda)
 
 print('Mode: ' + FLAGS.mode)
 
-print('----- ProMISE hyperparams -----')
+print('----- Prompter hyperparams -----')
 print('p_s: ' + FLAGS.prob_s)
 print('p_t: ' + FLAGS.prob_t)
 print('alpha: ' + FLAGS.alpha)
